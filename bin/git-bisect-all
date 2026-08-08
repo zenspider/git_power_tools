@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+b=$(git default-branch)
+
+git bisect start HEAD $b
+git bisect run "$@"
