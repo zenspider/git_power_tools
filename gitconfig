@@ -1,7 +1,6 @@
 [alias]
   name      = branch --show-current
   down      = !git pull --rebase origin $(git name)
-  drop      = "!f() { git rebase --onto ${1}^ ${1}; }; f"
   rotate    = "!f() { git drop $1 && git cherry-pick $1; }; f"
   onup      = push
   rollback  = reset HEAD^
