@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+
+git drop $1
+git cherry-pick $1

@@ -1,7 +1,6 @@
 [alias]
   name      = branch --show-current
   down      = !git pull --rebase origin $(git name)
-  rotate    = "!f() { git drop $1 && git cherry-pick $1; }; f"
   onup      = push
   rollback  = reset HEAD^
   allbut   = "!git push --force-with-lease $(git config branch.$(git name).pushremote) HEAD~${1:-1}:$(git name) #"
