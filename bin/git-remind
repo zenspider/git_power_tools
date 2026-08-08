@@ -1,0 +1,146 @@
+#!/usr/bin/env -S ruby -ws
+
+$f ||= false # fail on bad rebase
+$v ||= false # verbose
+$l ||= false # longer - 60s + rand 30
+$L ||= false # LONGER - 180s
+$p ||= false # push only, no rebase
+$q ||= false # quiet, don't print "nothing!" lines
+$r ||= false # rebase only
+$s ||= false # slow, add sleep between push
+$n ||= false # Only push if behind by >= $n commits
+
+$n &&= $n.to_i
+
+require "pp"
+
+base_sleep = ($s ? ($L ? 180 : ($l ? 60 : 15)) : 0)
+
+# globs = ARGV.empty? ? `git config remind.paths`.chomp.split(/,/) : ARGV
+
+globs = ARGV.empty? ? ["."] : ARGV # TODO: make more flexible
+
+dirs = Dir[*globs]
+  .select { |dir| File.directory? dir }
+  .select { |dir| File.exist? "#{dir}/.git" }
+  .select { |dir| File.directory? "#{dir}/.git" }
+  .sort
+
+def fmt cmd, n, p
+  "    %-67s # %7s commits" % [cmd, "%d %+d" % [n, p]]
+end
+
+def rev_count range
+  cmd = "git rev-list --left-right --count #{range} 2> /dev/null"
+  d, u = `#{cmd}`.split.map(&:to_i)
+  d = -d if d
+  [d || 0, u || 0]
+end
+
+def rev_name what
+  cmd = "git rev-parse --quiet --symbolic-full-name #{what} 2> /dev/null"
+  `#{cmd}`.chomp
+end
+
+DO_NOT_PUSH_RE = /canary|\d\d_bump$/
+
+dirs.each do |dir|
+  Dir.chdir dir do
+    show = []
+
+    status = `git status --ahead-behind -b --porcelain --untracked=no`
+
+    original_branch, _upstream = status.split[1].split("...")
+
+    modified = status.lines.drop 1
+
+    local = `git symbolic-ref HEAD`.chomp.gsub(/refs\/heads\//, "")
+    unless %w[master main].include? local then # FIX: make this independent
+      show << "  # current branch = #{local}"
+    end
+
+    unless modified.empty? then
+      show << "  # Modified files:"
+      modified.each do |line|
+        show << "    # #{line.strip}"
+      end
+    end
+
+    ############################################################
+
+    heads = %w[master main].reject { |b| `git show-ref --heads #{b}`.empty? }
+
+    branches = `git show-ref --heads`
+      .scan(/^\S+ refs\/heads\/(\S+)$/)
+      .map { |a| a.first }
+      .sort
+
+    unknown = heads - branches
+    unless unknown.empty?
+      # TODO? make this more resilient?
+      show << "  # Unknown branch(es): %p" % [unknown]
+      # next
+    end
+
+    bs = branches.map { |b|
+      u = rev_name("#{b}@{u}").delete_prefix "refs/heads/"
+      p = rev_name("#{b}@{push}")
+
+      u = nil if u == ""
+      p = nil if p == ""
+
+      uneg, upos = rev_count "#{u}...#{b}" if u
+      pneg, ppos = rev_count "#{p}...#{b}"
+
+      [b, u, p, uneg||0, upos||0, pneg||0, ppos||0]
+    }
+      .sort_by { |b, u, p, un, up, pn, pp|
+        [u||"", -(un.abs + pn.abs + up + pp), p||"", b] }
+
+    bs.each do |b, u, p, un, up, pn, pp|
+      puts "%-60s %-10s %-55s %4d %4d %4d %4d" % [b, u || "NIL", p || "NIL", un || -666, up || -666, pn || -666, pp || -666]
+      $stdout.flush
+    end if $v
+
+    ds, bs = bs.partition { |b, u, push, un, up, pn, pp|
+      ((un == 0 && up == 0) || (up == 0 && pp == 0)) \
+        && b !~ /JUNK|^main$/ \
+        && %w[main master].include?(u)
+    }
+
+    ds.each do |b, u, push, un, up, pn, pp|
+      show << fmt("git branch -d #{b}", pn, pp)
+    end
+
+    bs.each do |b, u, push, un, up, pn, pp|
+      if u =~ /^refs.remotes/ then
+        show << fmt("# skip: #{b}: remote upstream", pn, pp) unless $q
+      elsif !$p && u && un < 0 then
+        if $f then
+          show << fmt("git rebase #{u} #{b} || exit 1", un, up)
+        else
+          show << fmt("git rebase #{u} #{b} || git rebase --abort", un, up)
+        end
+      elsif push && pn < 0 && !push.empty? && b !~ DO_NOT_PUSH_RE then
+        next if $r
+        next if $n && pp < $n
+        time = base_sleep + ($L ? 0 : rand(30))
+        unless $r then
+          r = `git config branch.$(git branch --show-current).pushRemote || git config remote.pushDefault`.chomp
+          sleep = "; echo sleeping for #{time}s; sleep #{time}" if $s
+          show << fmt("git push --force-with-lease #{r} #{b}#{sleep}", pn, pp)
+        end
+      else
+        show << fmt("# nothing! #{b}", un, up) unless $q
+      end
+    end
+
+    show << "    git checkout #{original_branch}"
+
+    unless show.empty? then
+      show[0,0] = "cd ."
+      puts show.join "\n"
+      puts
+    end
+  end # Dir.chdir
+end

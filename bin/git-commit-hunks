@@ -1,0 +1,12 @@
+#!/usr/bin/env -S ruby -ws
+
+$y ||= false
+i, args = 1, "s\ny\nq"
+
+until system("git diff --quiet") do
+  msg = "%03d bisect hunk" % [i]
+  puts msg
+  system "echo %p | git add -p" % [args] if $y
+  system "git commit -m %p" % [msg] if $y
+  i += 1
+end

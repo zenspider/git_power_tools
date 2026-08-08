@@ -1,0 +1,8 @@
+#!/usr/bin/env -S ruby -w
+
+main = `git default-branch`.chomp
+base = `git merge-base HEAD #{main}`.chomp
+
+system "git bisect start --no-checkout --first-parent #{main} #{base}"
+system 'git bisect run sh -c "git rebase BISECT_HEAD || (git rebase --abort ; false)"'
+system "git bisect reset"

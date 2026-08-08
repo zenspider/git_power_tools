@@ -1,0 +1,24 @@
+#!/usr/bin/env -S ruby -ws
+
+$y ||= false # yes
+$f ||= false # fix (don't create branch)
+
+base = `git symbolic-ref --short refs/remotes/origin/HEAD`.chomp
+name = ARGV.shift
+shas = ARGV.dup
+
+def run *cmd
+  warn cmd.join " "
+  system(*cmd) or abort("error!") if $y
+end
+
+abort "git cherry-pr <branch-name> <sha>..." unless name && shas.any?
+
+puts "Creating '%s' on '%s' w/ %p" % [name, base, shas]
+
+unless $f then
+  run "git", "checkout", "-B", name, base
+  run "git", "cherry-pick", "--no-edit", *shas
+end
+
+run "gh", "pr", "create", "-f"

@@ -1,0 +1,17 @@
+#!/usr/bin/env -S ruby -ws
+
+$y ||= false
+$N ||= false
+
+ARGV << "bisect file" if ARGV.empty?
+
+msg = ARGV.join " "
+
+`git diff --name-only .`
+  .lines(chomp: true)
+  .each_with_index do |path, idx|
+    per_msg = $N ? "%s" % [msg] : "%03d %s" % [idx+1, msg]
+
+    puts "git commit -m %p %s" % ["#{per_msg}: #{path}", path]
+    system "git", "commit", "-m", "#{per_msg}: #{path}", path if $y
+  end

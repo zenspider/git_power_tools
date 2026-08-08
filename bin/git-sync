@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e
+
+b=$(git default-branch)
+git checkout --quiet --detach
+git fetch origin $b:$b
+git checkout --quiet -
