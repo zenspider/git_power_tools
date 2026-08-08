@@ -1,7 +1,9 @@
 [alias]
-  name      = branch --show-current
+  # James Brown School of Git
   down      = !git pull --rebase origin $(git name)
   onup      = push
+
+  name      = branch --show-current
   rollback  = reset HEAD^
   sha       = rev-parse --short
   unrebase  = reset --hard ORIG_HEAD
