@@ -9,5 +9,4 @@
   sha       = rev-parse --short
   unrebase  = reset --hard ORIG_HEAD
   unpull    = reset --hard HEAD@{1}
-  empty     = !"SHA=$(git sha HEAD); git rollback; git commit -C $SHA --allow-empty"
   debug     = !"GIT_TRACE=1 git"
