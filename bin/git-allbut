@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+b=$(git name)
+r=$(git config branch.$b.pushremote)
+
+git push --force-with-lease $r HEAD~${1:-1}:$b

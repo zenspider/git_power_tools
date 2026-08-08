@@ -3,7 +3,6 @@
   down      = !git pull --rebase origin $(git name)
   onup      = push
   rollback  = reset HEAD^
-  allbut   = "!git push --force-with-lease $(git config branch.$(git name).pushremote) HEAD~${1:-1}:$(git name) #"
   sha       = rev-parse --short
   unrebase  = reset --hard ORIG_HEAD
   unpull    = reset --hard HEAD@{1}
