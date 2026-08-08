@@ -1,5 +1,4 @@
 [alias]
-  default-branch = "!git symbolic-ref refs/remotes/origin/HEAD | cut -f4- -d/"
   name      = branch --show-current
   down      = !git pull --rebase origin $(git name)
   drop      = "!f() { git rebase --onto ${1}^ ${1}; }; f"
