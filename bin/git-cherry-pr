@@ -2,6 +2,7 @@
 
 $y ||= false # yes
 $f ||= false # fix (don't create branch)
+$d ||= false # draft PR
 
 base = `git symbolic-ref --short refs/remotes/origin/HEAD`.chomp
 name = ARGV.shift
@@ -17,8 +18,12 @@ abort "git cherry-pr <branch-name> <sha>..." unless name && shas.any?
 puts "Creating '%s' on '%s' w/ %p" % [name, base, shas]
 
 unless $f then
-  run "git", "checkout", "-B", name, base
+  run "git", "checkout", "-t", "-B", name, base
   run "git", "cherry-pick", "--no-edit", *shas
 end
 
-run "gh", "pr", "create", "-f"
+args = %w[ -f ]
+args << "-d" if $d
+
+run "git", "push", "origin", "--force-with-lease" # removes Q's
+run "gh", "pr", "create", *args
