@@ -20,6 +20,9 @@ base_sleep = ($s ? ($L ? 180 : ($l ? 60 : 15)) : 0)
 
 globs = ARGV.empty? ? ["."] : ARGV # TODO: make more flexible
 
+project_base = `git rev-parse --show-toplevel`.chomp # for monorepos
+Dir.chdir project_base if Dir.pwd != project_base
+
 dirs = Dir[*globs]
   .select { |dir| File.directory? dir }
   .select { |dir| File.exist? "#{dir}/.git" }
