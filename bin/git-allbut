@@ -2,6 +2,6 @@
 set -e
 
 b=$(git name)
-r=$(git config branch.$b.pushremote)
+r=$(git config --default origin branch.$b.pushRemote)
 
 git push --force-with-lease $r HEAD~${1:-1}:$b
