@@ -2,6 +2,7 @@
 
 $y ||= false
 $N ||= false
+$n = ($n || 1).to_i
 
 ARGV << "bisect file" if ARGV.empty?
 
@@ -10,7 +11,7 @@ msg = ARGV.join " "
 `git diff --name-only .`
   .lines(chomp: true)
   .each_with_index do |path, idx|
-    per_msg = $N ? "%s" % [msg] : "%03d %s" % [idx+1, msg]
+    per_msg = $N ? "%s" % [msg] : "%03d %s" % [idx+$n, msg]
 
     puts "git commit -m %p %s" % ["#{per_msg}: #{path}", path]
     system "git", "commit", "-m", "#{per_msg}: #{path}", path if $y
