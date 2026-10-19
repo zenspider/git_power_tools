@@ -15,9 +15,9 @@ end
 
 abort "git cherry-pr <branch-name> <sha>..." unless name && shas.any?
 
-puts "Creating '%s' on '%s' w/ %p" % [name, base, shas]
-
 unless $f then
+  puts "Creating '%s' on '%s' w/ %p" % [name, base, shas]
+
   run "git", "checkout", "-t", "-B", name, base
   run "git", "cherry-pick", "--no-edit", *shas
 end
