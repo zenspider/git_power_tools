@@ -22,7 +22,7 @@ unless $f then
   run "git", "cherry-pick", "--no-edit", *shas
 end
 
-args = %w[ -f ]
+args = %w[ --fill-verbose ]
 args << "-d" if $d
 
 run "git", "push", "origin", "--force-with-lease" # removes Q's
