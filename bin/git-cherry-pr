@@ -27,3 +27,4 @@ args << "-d" if $d
 
 run "git", "push", "origin", "--force-with-lease" # removes Q's
 run "gh", "pr", "create", *args
+run "git", "checkout", "-"
