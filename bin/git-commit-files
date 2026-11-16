@@ -2,7 +2,8 @@
 
 $y ||= false
 $N ||= false
-$n = ($n || 1).to_i
+$n ||= 1
+$n = $n.to_i
 
 ARGV << "bisect file" if ARGV.empty?
 
