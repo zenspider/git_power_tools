@@ -129,7 +129,7 @@ dirs.each do |dir|
         next if $n && pp < $n
         time = base_sleep + ($L ? 0 : rand(30))
         unless $r then
-          r = `git config branch.$(git branch --show-current).pushRemote || git config remote.pushDefault`.chomp
+          r = `git config branch.${b}.pushRemote || git config remote.pushDefault`.chomp
           sleep = "; echo sleeping for #{time}s; sleep #{time}" if $s
           show << fmt("git push --force-with-lease #{r} #{b}#{sleep}", pn, pp)
         end
